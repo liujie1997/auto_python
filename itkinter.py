@@ -11,7 +11,6 @@ from response_code import *
 from itelnet import *
 from iexcel import *
 from tkinter import ttk
-import signal
 
 
 class UI(object):
@@ -124,8 +123,21 @@ class UI(object):
         self.tr069_2_button = Button(self.mode_window, text="tr069-2")
         self.tr069_2_button.grid(row=7, column=1)
 
+        self.fota_Lable = Label(self.mode_window, text="fota与cfota升级", height=3)
+        self.fota_Lable.grid(row=8, column=0)
+
+        self.old_cfota_button = Button(self.mode_window, text="老cfota")
+        self.old_cfota_button.grid(row=8, column=1)
+
+        self.new_cfota_button = Button(self.mode_window, text="新cfota")
+        self.new_cfota_button.grid(row=8, column=2)
+
+        self.new_fota_button = Button(self.mode_window, text="我们平台上的fota")
+        self.new_fota_button.grid(row=8, column=3)
+
         self.mode_window.mainloop()
 
+    # 开启telnet
     def linkTelnet(self, ip, port, mode):
         if mode in list(equipment_mode["mtk"].values()) or (
                 mode in list(equipment_mode["博通"].values())):
@@ -153,7 +165,10 @@ class UI(object):
         self.link_text.delete(0, "end")
         self.link_text.insert(0, response_code[result])
         self.link_text.config(state="readonly")
+        if result == 2:
+            self.again_user_passwd()
 
+    # 执行指令
     def execute_cmd(self, cmd):
         if self.link_text.get() == response_code[1]:
             result = self.tn.execute_command(cmd, self.mode_text.get())
@@ -165,6 +180,7 @@ class UI(object):
         else:
             tkinter.messagebox.showinfo('提示', response_code[3])
 
+    # 产测写窗口
     def produce_write_window(self):
         self.t1 = tkinter.Toplevel()
         self.create_window(self.t1, "产测写入", 500, 500)
@@ -269,6 +285,7 @@ class UI(object):
             self.produce_write_submit = Button(self.t1, text="提交", command=self.excute_produce_write)
             self.produce_write_submit.grid(row=10, column=0)
 
+    # 执行产测写
     def excute_produce_write(self):
         data = {}
         if self.mode_text.get() == equipment_mode["mtk"][4] or self.mode_text.get() == equipment_mode["mtk"][5]:
@@ -312,6 +329,7 @@ class UI(object):
 
         self.t1.destroy()
 
+    # 产测读窗口
     def produce_read_window(self):
         self.t2 = tkinter.Toplevel()
         self.create_window(self.t2, "读取产测", 600, 600)
@@ -563,7 +581,6 @@ class UI(object):
 
             self.pinRead_Lable = Label(
 
-
                 self.t2, text="pin get")
             self.pinRead_Lable.grid(row=10, column=0)
             self.pinRead = Entry(self.t2, width=50)
@@ -612,6 +629,7 @@ class UI(object):
         self.moreRead_button = Button(self.t2, text="批量读取")
         self.moreRead_button.grid(row=30, column=0)
 
+    # 执行单个产测读
     def produceRead_one(self, value, format):
         if self.link_text.get() == response_code[1]:
             if self.mode_text.get() in list(equipment_mode['创达特'].values()):
@@ -632,6 +650,36 @@ class UI(object):
     def produceRead_more(self):
         print(2)
 
+    def again_user_passwd(self):
+        self.t3 = tkinter.Toplevel()
+        self.create_window(self.t3, "重新输入账号密码", 400, 400)
+
+        self.again_user_label = Label(self.t3, text="用户名", height=3)
+        self.again_user_label.grid(row=0, column=0)
+        self.again_user_entry = Entry(self.t3)
+        self.again_user_entry.grid(row=0, column=1)
+
+        self.again_passwd_label = Label(self.t3, text="密码", height=3)
+        self.again_passwd_label.grid(row=1, column=0)
+        self.again_passwd_entry = Entry(self.t3)
+        self.again_passwd_entry.grid(row=1, column=1)
+
+        self.again_user_passwd_button = Button(self.t3, text="提交",
+                                               command=lambda: self.excute_again_user_passwd(self.ip_text.get(),
+                                                                                   self.again_user_entry.get(),
+                                                                                   self.again_passwd_entry.get(), self.port_text.get(),
+                                                                                   self.mode_text.get()))
+        self.again_user_passwd_button.grid(row=2, column=0)
+
+    def excute_again_user_passwd(self,ip,username,passwd,port,mode):
+        result=self.tn.link_telnet(ip, username, passwd, port, mode)
+        self.link_text.config(state='normal')
+        self.link_text.delete(0, "end")
+        self.link_text.insert(0, response_code[result])
+        self.link_text.config(state="readonly")
+        if result !=2:
+            self.t3.destroy()
+    # 创建窗口
     def create_window(self, t, name, height, width):
         t.title(name)
         screenwidth = t.winfo_screenwidth()

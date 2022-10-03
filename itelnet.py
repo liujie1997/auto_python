@@ -34,17 +34,18 @@ class TelnetClient(object):
             else:
                 return 2
         elif mode in list(equipment_mode["创达特"].values()):
-            self.tn.read_until(b'LOGIN#')
+            self.tn.read_until(b'LOGIN# ')
             self.tn.write(username.encode('ascii') + b'\n')
             self.tn.read_until(b'PASS#')
             self.tn.write(passwd.encode('ascii') + b'\n')
-            self.tn.read_until(b'AMS#')
-            self.tn.write('manutest'.encode('ascii') + b'\n')
+            time.sleep(2)
             loging_result = self.tn.read_very_eager().decode('ascii')
-            if 'AMS>MANUTEST#' not in loging_result:
-                return 1
-            else:
+            print(loging_result)
+            if 'AMS# ' not in loging_result:
                 return 2
+            #self.tn.read_until(b'AMS#')
+            self.tn.write('manutest'.encode('ascii') + b'\n')
+            return  1
 
     def execute_command(self, cmd, mode):
         self.tn.write(cmd.encode('ascii') + b'\n')
